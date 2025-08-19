@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'Docker_UI_15.99' }
+    agent { label 'Docker_UI_15.xx' }
  options {
         // This ensures only one build runs at a time; others wait in queue
         disableConcurrentBuilds()
@@ -7,14 +7,14 @@ pipeline {
     environment {
         GITLAB_REPO              = 'https://swglscp.rndsoftech.com/rnd_common/canteen.git'
         GITLAB_CREDENTIALS       = 'New_Gitlab_Username_password'
-        DEPLOYMENT_SERVER        = '172.16.15.99'
+        DEPLOYMENT_SERVER        = '172.16.15.xx'
         DEPLOYMENT_CREDENTIALS   = 'Docker_deploy_UI'
         WORKSPACE_DIR            = '/usr/pre_code/workspace/canteen'
         PUBLISH_DIR              = '/usr/pre_code/published_code/canteen'
         DEPLOY_DIR               = '/var/www/html/canteen'
         DOCKER_VOLUME_PATH       = '/var/lib/docker/volumes/canteen_data/_data/canteen'
-        JENKINS_USER_CREDENTIALS = 'jenkins_user_15.59'
-        DOCKER_MANAGER           = '172.16.15.60'
+        JENKINS_USER_CREDENTIALS = 'jenkins_user_15.xx'
+        DOCKER_MANAGER           = '172.16.15.xx'
         DOCKER_SERVICE_NAME      = 'dockertestUI_stack_canteen'
     }
 
