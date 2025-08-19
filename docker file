@@ -1,0 +1,109 @@
+pipeline {
+    agent { label 'Docker_UI_15.99' }
+ options {
+        // This ensures only one build runs at a time; others wait in queue
+        disableConcurrentBuilds()
+    }
+    environment {
+        GITLAB_REPO              = 'https://swglscp.rndsoftech.com/rnd_common/canteen.git'
+        GITLAB_CREDENTIALS       = 'New_Gitlab_Username_password'
+        DEPLOYMENT_SERVER        = '172.16.15.99'
+        DEPLOYMENT_CREDENTIALS   = 'Docker_deploy_UI'
+        WORKSPACE_DIR            = '/usr/pre_code/workspace/canteen'
+        PUBLISH_DIR              = '/usr/pre_code/published_code/canteen'
+        DEPLOY_DIR               = '/var/www/html/canteen'
+        DOCKER_VOLUME_PATH       = '/var/lib/docker/volumes/canteen_data/_data/canteen'
+        JENKINS_USER_CREDENTIALS = 'jenkins_user_15.59'
+        DOCKER_MANAGER           = '172.16.15.60'
+        DOCKER_SERVICE_NAME      = 'dockertestUI_stack_canteen'
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'dev', credentialsId: GITLAB_CREDENTIALS, url: GITLAB_REPO
+            }
+        }
+
+        stage('Copy Raw Code to Workspace') {
+            steps {
+                sshagent([DEPLOYMENT_CREDENTIALS]) {
+                    sh """
+                        rsync -avz --delete ${env.WORKSPACE}/ ${DEPLOYMENT_SERVER}:${WORKSPACE_DIR}/
+                        ssh ${DEPLOYMENT_SERVER} '
+                            cp -r ${WORKSPACE_DIR}/* ${PUBLISH_DIR}/
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withCredentials([string(credentialsId: 'SONARQUBE_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    sshagent([DEPLOYMENT_CREDENTIALS]) {
+                        sh """
+                            ssh ${DEPLOYMENT_SERVER} '
+                                mkdir -p ${PUBLISH_DIR}/.scannerwork/scanner-report &&
+                                cd ${PUBLISH_DIR} &&
+                                sonar-scanner -Dsonar.projectKey=canteen \\
+                                              -Dsonar.sources=. \\
+                                              -Dsonar.host.url=http://172.16.15.201:9000 \\
+                                              -Dsonar.login=$SONAR_TOKEN
+                            '
+                        """
+                    }
+                    echo "✅ SonarQube scan completed."
+                }
+            }
+        }
+
+        stage('Deploy Published Code') {
+            steps {
+                sshagent([DEPLOYMENT_CREDENTIALS]) {
+                    sh """
+                        ssh ${DEPLOYMENT_SERVER} "
+                            BACKUP_TIME=\\\$(date \\"+%Y-%m-%d_%H-%M-%S\\")
+                            tar -czf /mnt/docker_backup/15.99/precode/canteen/canteen_workspace_\\\${BACKUP_TIME}.tar.gz -C ${WORKSPACE_DIR} .
+                            rsync -avz --exclude 'third_party' --exclude 'config.php' --exclude 'index.php' --exclude 'database.php' \\"${PUBLISH_DIR}/\\" \\"${DOCKER_VOLUME_PATH}/\\"
+                            rm -rf ${PUBLISH_DIR}/*
+                            chown -R www-data:www-data ${DOCKER_VOLUME_PATH}
+                            echo '✅ Deployment completed successfully.'
+                        "
+                    """
+                }
+            }
+        }
+
+        stage('Update Docker Service') {
+            steps {
+                sshagent([JENKINS_USER_CREDENTIALS]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no root@${DOCKER_MANAGER} "docker service update --force ${DOCKER_SERVICE_NAME}"
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                emailext(
+                    subject: "Jenkins Build: ${currentBuild.fullDisplayName} - ${currentBuild.currentResult}",
+                    body: """
+                        <h2>Jenkins Pipeline Notification</h2>
+                        <p><b>Project:</b> canteen</p>
+                        <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                        <p><b>Status:</b> ${currentBuild.currentResult}</p>
+                        <p><b>Git Branch:</b> dev</p>
+                        <br><p>Regards,<br>Jenkins CI</p>
+                    """,
+                    mimeType: 'text/html',
+                    to: 'dharshan@rndsoftech.net',
+                    attachLog: true
+                )
+            }
+        }
+    }
+}
