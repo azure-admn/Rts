@@ -1,0 +1,59 @@
+What Is Git?
+
+Git is a version control system – it helps track changes in code and lets multiple developers collaborate on the same project without overwriting each other’s work.
+
+💡 Key Git Concepts
+Concept	Description
+Repository (repo)	A project folder tracked by Git. Can be local (on your computer) or remote (e.g., GitHub).
+Commit	A snapshot of your changes. Think of it as saving a version of your code.
+Branch	A separate line of development. You can work on features or fixes without affecting the main code.
+Merge	Combining changes from one branch into another.
+Clone	Copying a remote repository to your local machine.
+Pull	Fetching and integrating changes from a remote repo to your local one.
+Push	Sending your local commits to the remote repository.
+Stage (Index)	A prep area where you list changes to include in your next commit.
+🔁 Common Git Workflow
+
+Here’s a typical workflow in Git:
+
+1. Clone the Repository (only the first time)
+git clone https://github.com/username/project.git
+
+2. Create a Branch
+git checkout -b feature/my-feature
+
+3. Make Changes
+
+Edit your files using an editor or IDE.
+
+4. Stage the Changes
+git add .
+# or add specific files: git add file1.txt file2.js
+
+5. Commit the Changes
+git commit -m "Add a new feature"
+
+6. Push the Branch to Remote
+git push origin feature/my-feature
+
+7. Open a Pull Request (PR)
+
+Go to GitHub (or GitLab/Bitbucket), compare branches, and request to merge your changes into main.
+
+8. Code Review & Merge
+
+After review, your branch is merged into the main branch.
+
+📘 Basic Git Commands Cheat Sheet
+Task	Command
+Initialize repo	git init
+Check status	git status
+Add files to staging	git add . or git add filename
+Commit changes	git commit -m "message"
+View history	git log
+Create branch	git checkout -b branch-name
+Switch branches	git checkout branch-name
+Merge branch	git merge branch-name
+Pull from remote	git pull
+Push to remote	git push
+View remotes	git remote -v
