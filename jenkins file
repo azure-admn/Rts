@@ -64,7 +64,7 @@ pipeline {
                     sh """
                         ssh ${DEPLOYMENT_SERVER} "
                             BACKUP_TIME=\\\$(date \\"+%Y-%m-%d_%H-%M-%S\\")
-                            tar -czf /mnt/docker_backup/15.99/precode/canteen/canteen_workspace_\\\${BACKUP_TIME}.tar.gz -C ${WORKSPACE_DIR} .
+                            tar -czf /mnt/docker_backup/15.xx/precode/canteen/canteen_workspace_\\\${BACKUP_TIME}.tar.gz -C ${WORKSPACE_DIR} .
                             rsync -avz --exclude 'third_party' --exclude 'config.php' --exclude 'index.php' --exclude 'database.php' \\"${PUBLISH_DIR}/\\" \\"${DOCKER_VOLUME_PATH}/\\"
                             rm -rf ${PUBLISH_DIR}/*
                             chown -R www-data:www-data ${DOCKER_VOLUME_PATH}
