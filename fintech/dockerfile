@@ -1,0 +1,15 @@
+# Use .NET 8 runtime as base image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /var/www/html/fintech
+
+# Copy published .NET application
+COPY Fintech/ .
+
+# Copy SSL certificate
+COPY certs/STAR_peoplemailer_com.pfx /etc/ssl/private/STAR_peoplemailer_com.pfx
+
+# Expose HTTPS port
+EXPOSE 5039 5040
+
+# Run the .NET application
+ENTRYPOINT ["dotnet", "FinanceAutomation.dll"]
